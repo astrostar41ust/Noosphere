@@ -16,13 +16,17 @@ type ChatService interface {
 
 type DefaultChatService struct {
 	repo ChatRepository
+	aiClient AIClient
 }
 
-func NewDefaultChatService(repo ChatRepository) *DefaultChatService {
-	return &DefaultChatService{repo: repo}
+func NewDefaultChatService(repo ChatRepository, aiClient AIClient) *DefaultChatService {
+	return &DefaultChatService{repo: repo, aiClient: aiClient}
 }
 
 func (s *DefaultChatService) SendMessage(ctx context.Context, sessionID uuid.UUID, role string, content string) (*Message, error) {
+	if content == "" {
+		return nil, fmt.Errorf("message content cannot be completely empty")
+	}
 
 	msg := &Message{
 		ID:        uuid.New(),
@@ -37,7 +41,34 @@ func (s *DefaultChatService) SendMessage(ctx context.Context, sessionID uuid.UUI
 		return nil, fmt.Errorf("service failed to save message to DB: %w", err)
 	}
 
-	return msg, nil
+
+	history, err := s.repo.GetSessionHistory(ctx, sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile historical frame context for model: %w", err)
+	}
+
+	var plainHistory []Message
+	for _, m := range history {
+		plainHistory = append(plainHistory, *m)
+	}
+
+	aiText, err := s.aiClient.GenerateResponse(ctx, plainHistory)
+	if err != nil {
+		return nil, fmt.Errorf("ai engine generation cluster pipeline failure: %w", err)
+	}
+
+	assistantMsg := &Message{
+		ID:        uuid.New(),
+		SessionID: sessionID,
+		Role:      "assistant",
+		Content:   aiText,
+		CreatedAt: time.Now(),
+	}
+	if err := s.repo.SaveMessage(ctx, assistantMsg); err != nil {
+		return nil, fmt.Errorf("failed to securely store generated assistant message: %w", err)
+	}
+
+	return assistantMsg, nil
 }
 
 func (s *DefaultChatService) GetChatHistory(ctx context.Context, sessionID uuid.UUID) ([]*Message, error) {

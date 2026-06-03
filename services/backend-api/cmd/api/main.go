@@ -38,7 +38,11 @@ func main() {
 	fmt.Println("Database schemas are fully up-to-date!")
 
 	chatRepo := chat.NewPostgresChatRepository(db)
-	chatService := chat.NewDefaultChatService(chatRepo)
+
+	pythonAIEndpoint := "http://localhost:8000"
+	aiClient := chat.NewHTTPInferenceClient(pythonAIEndpoint)
+	
+	chatService := chat.NewDefaultChatService(chatRepo, aiClient)
 	chatController := chat.NewChatController(chatService) 
 
 	r := chi.NewRouter()
