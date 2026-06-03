@@ -1,10 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import { Bot, Loader2, RefreshCw } from 'lucide-react';
+import { Bot, Loader2, RefreshCw, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './message-bubble';
 import { ChatInput } from './chat-input';
 import { useChatMessages } from '../hooks/use-chat-messages';
 import { useSendMessage } from '../hooks/use-send-message';
+import { useCurrentUser, useLogout } from '@/features/auth';
 
 interface ChatWindowProps {
   sessionId: string;
@@ -15,6 +16,9 @@ export function ChatWindow({ sessionId }: ChatWindowProps) {
 
   const { data: messages = [], isLoading: isHistoryLoading, isError: isHistoryError, refetch } = useChatMessages(sessionId);
   const { mutate: sendMessage, isPending: isSending } = useSendMessage(sessionId);
+  
+  const { data: currentUser } = useCurrentUser();
+  const logout = useLogout();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,10 +38,23 @@ export function ChatWindow({ sessionId }: ChatWindowProps) {
           </div>
           <div>
             <h1 className="text-sm font-semibold tracking-wide">Noosphere Core Interface</h1>
-            <p className="text-[11px] text-slate-400">Radix UI Context Nodes Active</p>
+            <p className="text-[11px] text-slate-400">
+              {currentUser ? `Active Node: ${currentUser.username}` : 'Radix UI Context Nodes Active'}
+            </p>
           </div>
         </div>
+        {currentUser && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={logout}
+            className="gap-2 border-slate-800 hover:bg-red-950/20 hover:text-red-400 hover:border-red-900/30 text-xs rounded-xl px-3 transition-all"
+          >
+            <LogOut size={12} /> Terminate Link
+          </Button>
+        )}
       </header>
+
 
       {/* Message Output Viewport Canvas */}
       <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-6 max-w-4xl mx-auto w-full">
