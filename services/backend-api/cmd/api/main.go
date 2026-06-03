@@ -1,11 +1,15 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
 	"net/http"
 	"noosphere/backend-api/internal/config"
 	"noosphere/backend-api/internal/database"
+	"noosphere/backend-api/internal/modules/auth"
 	"noosphere/backend-api/internal/modules/chat"
+	"noosphere/backend-api/internal/modules/user"
+	"time"
 
 	_ "noosphere/backend-api/docs" 
 	"github.com/go-chi/chi/v5"
@@ -46,6 +50,36 @@ func main() {
 	chatService := chat.NewDefaultChatService(chatRepo, aiClient)
 	chatController := chat.NewChatController(chatService) 
 
+	// JWT Configuration & Fallback Generation
+	var jwtSecret []byte
+	if cfg.JWTSecret == "" {
+		fmt.Println("WARNING: JWT_SECRET environment configuration is empty. Generating secure ephemeral key...")
+		ephemeralSecret := make([]byte, 32)
+		if _, err := rand.Read(ephemeralSecret); err != nil {
+			panic(fmt.Sprintf("CRITICAL: Failed to generate secure random JWT ephemeral key: %v", err))
+		}
+		jwtSecret = ephemeralSecret
+	} else {
+		jwtSecret = []byte(cfg.JWTSecret)
+	}
+
+	accessExpiry, err := time.ParseDuration(cfg.JWTAccessExpiry)
+	if err != nil {
+		fmt.Printf("WARNING: Invalid JWT_ACCESS_EXPIRY value '%s', falling back to 15m: %v\n", cfg.JWTAccessExpiry, err)
+		accessExpiry = 15 * time.Minute
+	}
+
+	refreshExpiry, err := time.ParseDuration(cfg.JWTRefreshExpiry)
+	if err != nil {
+		fmt.Printf("WARNING: Invalid JWT_REFRESH_EXPIRY value '%s', falling back to 168h: %v\n", cfg.JWTRefreshExpiry, err)
+		refreshExpiry = 168 * time.Hour
+	}
+
+	userRepo := user.NewPostgresUserRepository(db)
+	authRepo := auth.NewPostgresAuthRepository(db)
+	authService := auth.NewDefaultAuthService(authRepo, userRepo, jwtSecret, accessExpiry, refreshExpiry)
+	authController := auth.NewAuthController(authService)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -69,6 +103,11 @@ func main() {
 
 	r.Post("/api/v1/chat/message", chatController.HandleSendMessage)
 	r.Get("/api/v1/chat/session/{sessionID}/history", chatController.HandleGetChatHistory)
+
+	r.Post("/api/v1/auth/register", authController.HandleRegister)
+	r.Post("/api/v1/auth/login", authController.HandleLogin)
+	r.Post("/api/v1/auth/refresh", authController.HandleRefresh)
+	r.Post("/api/v1/auth/logout", authController.HandleLogout)
 
 	serverAddress := ":" + cfg.Port
 	fmt.Printf("Noosphere Engine online. Listening on port %s...\n", cfg.Port)

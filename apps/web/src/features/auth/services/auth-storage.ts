@@ -1,19 +1,6 @@
-import { User, StoredUserCredentials } from '../types';
+import { User } from '../types';
 
 const PROFILE_KEY = 'user_profile';
-const REGISTERED_USERS_KEY = 'noosphere_registered_users';
-
-export function getRegisteredUsers(): StoredUserCredentials[] {
-  if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem(REGISTERED_USERS_KEY);
-  return stored ? JSON.parse(stored) : [];
-}
-
-export function saveRegisteredUser(user: StoredUserCredentials): void {
-  if (typeof window === 'undefined') return;
-  const current = getRegisteredUsers();
-  localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify([...current, user]));
-}
 
 export function getCurrentUser(): User | null {
   if (typeof window === 'undefined') return null;
