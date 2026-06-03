@@ -1,0 +1,76 @@
+basePath: /
+definitions:
+  internal_modules_chat.ChatMessageResponse:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      role:
+        type: string
+      session_id:
+        type: string
+    type: object
+  internal_modules_chat.SendMessageRequest:
+    properties:
+      content:
+        minLength: 1
+        type: string
+      role:
+        enum:
+        - user
+        - assistant
+        - system
+        type: string
+      session_id:
+        type: string
+    required:
+    - content
+    - role
+    - session_id
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Core high-performance orchestration gateway for the Noosphere ecosystem.
+  title: Noosphere Backend API Engine
+  version: "1.0"
+paths:
+  /api/v1/chat/message:
+    post:
+      consumes:
+      - application/json
+      description: Validates incoming token data streams and persists user/assistant
+        dialogue payloads.
+      parameters:
+      - description: Chat Message Structure Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_chat.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_chat.ChatMessageResponse'
+        "400":
+          description: Invalid JSON or schema validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal processing engine database exception
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Send a conversation message
+      tags:
+      - chat
+swagger: "2.0"
