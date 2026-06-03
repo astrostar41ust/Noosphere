@@ -1,0 +1,25 @@
+# Mac system files
+.DS_Store
+
+# IDE settings
+.vscode/
+.idea/
+
+# Python artifacts
+__pycache__/
+*.pyc
+.venv/
+venv/
+services/ai-inference/models/*
+!services/ai-inference/models/.gitkeep
+
+# Go artifacts
+backend-api/backend-api
+*.exe
+*.out
+
+# JavaScript / Node / Bun artifacts
+node_modules/
+.next/
+dist/
+.env
