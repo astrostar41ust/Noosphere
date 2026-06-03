@@ -66,6 +66,56 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/chat/session/{sessionID}/history": {
+            "get": {
+                "description": "Queries the underlying Postgres engine to load all past dialogue sequences for a specific session.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Retrieve conversation log histories",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Target Session UUID",
+                        "name": "sessionID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_modules_chat.ChatMessageResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload UUID formatting structure",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal processing engine error exception",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

@@ -73,4 +73,38 @@ paths:
       summary: Send a conversation message
       tags:
       - chat
+  /api/v1/chat/session/{sessionID}/history:
+    get:
+      description: Queries the underlying Postgres engine to load all past dialogue
+        sequences for a specific session.
+      parameters:
+      - description: Target Session UUID
+        in: path
+        name: sessionID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_modules_chat.ChatMessageResponse'
+            type: array
+        "400":
+          description: Invalid payload UUID formatting structure
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal processing engine error exception
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Retrieve conversation log histories
+      tags:
+      - chat
 swagger: "2.0"

@@ -2,8 +2,9 @@ package chat
 
 import (
 	"net/http"
-	"noosphere/backend-api/internal/pkg/httpio" 
+	"noosphere/backend-api/internal/pkg/httpio"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
@@ -36,4 +37,28 @@ func (c *ChatController) HandleSendMessage(w http.ResponseWriter, r *http.Reques
 	}
 
 	httpio.RespondWithJSON(w, http.StatusCreated, MapMessageToResponse(msg))
+}
+
+
+func (c *ChatController) HandleGetChatHistory(w http.ResponseWriter, r *http.Request) {
+	sessionIDStr := chi.URLParam(r, "sessionID")
+	
+	sessionUUID, err := uuid.Parse(sessionIDStr)
+	if err != nil {
+		httpio.RespondWithError(w, http.StatusBadRequest, "Invalid URL session UUID structural format")
+		return
+	}
+
+	messages, err := c.service.GetChatHistory(r.Context(), sessionUUID)
+	if err != nil {
+		httpio.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve history logs: "+err.Error())
+		return
+	}
+
+	responseDTOs := make([]ChatMessageResponse, 0)
+	for _, msg := range messages {
+		responseDTOs = append(responseDTOs, MapMessageToResponse(msg))
+	}
+
+	httpio.RespondWithJSON(w, http.StatusOK, responseDTOs)
 }

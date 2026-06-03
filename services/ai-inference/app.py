@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Local AI Inference Sidecar", lifespan=lifespan)
 
-@app.post("/v1/chat", response_model=PromptResponse)
+@app.post("/api/v1/chat", response_model=PromptResponse)
 async def chat_endpoint(request: PromptRequest):
     try:
         generated_text = ai_engine.generate(

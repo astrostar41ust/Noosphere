@@ -13,3 +13,18 @@ package chat
 // @Failure      500      {object}  map[string]string        "Internal processing engine database exception"
 // @Router       /api/v1/chat/message [post]
 func HandleSendMessageDocs() {}
+
+
+
+
+// HandleGetChatHistoryDocs
+// @Summary      Retrieve conversation log histories
+// @Description  Queries the underlying Postgres engine to load all past dialogue sequences for a specific session.
+// @Tags         chat
+// @Produce      json
+// @Param        sessionID  path      string  true  "Target Session UUID"
+// @Success      200        {array}   chat.ChatMessageResponse
+// @Failure      400        {object}  map[string]string "Invalid payload UUID formatting structure"
+// @Failure      500        {object}  map[string]string "Internal processing engine error exception"
+// @Router       /api/v1/chat/session/{sessionID}/history [get]
+func HandleGetChatHistoryDocs() {}

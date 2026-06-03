@@ -58,6 +58,7 @@ func main() {
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	r.Post("/api/v1/chat/message", chatController.HandleSendMessage)
+	r.Get("/api/v1/chat/session/{sessionID}/history", chatController.HandleGetChatHistory)
 
 	serverAddress := ":" + cfg.Port
 	fmt.Printf("Noosphere Engine online. Listening on port %s...\n", cfg.Port)
