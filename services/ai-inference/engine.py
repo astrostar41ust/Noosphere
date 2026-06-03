@@ -1,6 +1,6 @@
 import os
 from llama_cpp import Llama
-from .config import settings
+from config import settings
 
 class InferenceEngine:
     def __init__(self):
